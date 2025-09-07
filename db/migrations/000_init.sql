@@ -1,5 +1,5 @@
--- Initial schema per BOOTSTRAP.md
 
+-- 000_init.sql
 create table if not exists countries (
   iso3 text primary key,
   iso2 text,
@@ -22,9 +22,3 @@ create table if not exists observations (
   source_url text,
   ingested_at timestamptz default now()
 );
-
-create index if not exists idx_observations_iso3_year on observations(iso3, year);
-create index if not exists idx_observations_trust_year on observations(trust_type, year);
-
--- country_year materialized view will be defined by ETL assemble pipeline
-

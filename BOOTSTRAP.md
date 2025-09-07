@@ -1,14 +1,14 @@
-# BOOTSTRAP.md — Codex Bootstrap Playbook
+# BOOTSTRAP.md — Codex Bootstrap Playbook (with UI Specs)
 
-> Purpose: Give Codex (and humans) everything needed to spin up the Global Trust Index (GTI) project from zero to a working MVP.
+> Purpose: Give Codex (and humans) everything needed to spin up the Global Trust Index (GTI) from zero to an MVP — including backend, ETL, API, **and** UI wireframes.
 
 ---
 
 ## 0) Quickstart Summary
 
 **Goal (Day 1):**
-- Stand up the repo, database, and a minimal API that serves mock GTI scores for 5 countries.
-- Land first ETL job that ingests TI CPI (open CSV) into Postgres and exposes it via `/api/score?year=YYYY&trust_type=proxy`.
+- Stand up the repo, database, and a minimal API that serves GTI (proxy) scores for 5 countries.
+- Land first ETL job that ingests TI CPI into Postgres and exposes it via `/api/score?year=YYYY&trust_type=proxy`.
 
 **One command:**
 ```bash
@@ -21,7 +21,7 @@ make up  # boots Postgres+Redis+MinIO, runs migrations, seeds demo data, starts 
 
 ```
 trustindex/
-├─ api/                 # Next.js API routes OR FastAPI (choose one; defaults to Next.js)
+├─ api/                 # Next.js API routes (default) or FastAPI if preferred
 │  ├─ routes/           # /api/* endpoints
 │  ├─ lib/              # db client, caching, validation
 │  └─ package.json
@@ -60,7 +60,7 @@ trustindex/
 │  └─ trust_core_*.mbtiles
 ├─ .env.example
 ├─ Makefile
-├─ AGENTS.md            # methodology & agent duties (see canvas)
+├─ AGENTS.md            # methodology & agent duties
 └─ README.md
 ```
 
@@ -260,7 +260,48 @@ python -m pipelines.assemble --year 2024 --sources CPI WGI
 
 ---
 
-## 8) Seed Data & Reference Files
+## 8) UI Wireframes (ASCII Mockups)
+
+> These guide Codex to scaffold components and routes. See AGENTS.md for conceptual model.
+
+### Main Map Screen
+```
+Header
+└─ [Logo/“Trust Index”]   [Search country/region]   [Year slider ◀─●─▶]   [Download]
+
+Main
+├─ Left Panel (Filters)
+│  ├─ MODE
+│  │   • Core Trust Score (GTI)
+│  │   • Interpersonal
+│  │   • Institutional
+│  ├─ OVERLAYS
+│  │   ☐ Regional barometers  ☐ CPI  ☐ WGI  ☐ OECD  ☐ Pew
+│  ├─ COLOR SCALE
+│  │   • Quantiles  • Continuous  • Diverging
+│  └─ DATA NOTES (source + vintage)
+│
+├─ Map (choropleth)
+│  └─ Hover tooltip: Country • Score (0–100) • Source/year • mini trend
+│
+└─ Right Panel (Details)
+   ├─ Country header: Flag • Name • Compare button
+   ├─ KPI cards: Core / Interpersonal / Institutional
+   ├─ Time series chart (10–20y)
+   ├─ Source breakdown table (value, year, sample)
+   └─ Comparisons: region avg • income peers
+```
+
+### Components to Scaffold
+- `MapView` (Mapbox GL / MapLibre) — reads vector tiles
+- `YearSlider` — snaps to available years
+- `FilterPanel` — mode/overlay toggles; writes to global state (Zustand)
+- `CountryPanel` — fetches `/api/country/{iso3}`; renders KPIs + D3 chart
+- `CompareDrawer` — select peers; multi-line chart
+
+---
+
+## 9) Seed Data & Reference Files
 
 **`data/reference/iso_map.csv` (excerpt):**
 ```
@@ -280,7 +321,7 @@ IND,IN,India
 
 ---
 
-## 9) CI/CD (GitHub Actions)
+## 10) CI/CD (GitHub Actions)
 
 `.github/workflows/ci.yml` (key steps):
 - Setup Node + Python
@@ -291,53 +332,53 @@ IND,IN,India
 
 ---
 
-## 10) Codex Agent Playbooks
+## 11) Codex Agent Playbooks
 
 > Paste these prompts into your orchestration of Codex agents.
 
 **Agent: Repo Scaffolder**
-- *“Create the directory tree from Section 1; generate placeholder files with headers and TODOs; add `.gitignore` for Node, Python, and data folders; initialize npm workspaces in `/web` and `/api`; initialize Python venv in `/etl`.”*
+- “Create the directory tree from Section 1; generate placeholder files with headers and TODOs; add `.gitignore` for Node, Python, and data folders; initialize npm workspaces in `/web` and `/api`; initialize Python venv in `/etl`.”
 
 **Agent: DB & Migrations**
-- *“Generate SQL migration file `db/migrations/000_init.sql` with the tables in Section 3; add a script to apply migrations using `psql`; wire `make migrate`.”*
+- “Generate SQL migration file `db/migrations/000_init.sql` with the tables in Section 3; add a script to apply migrations using `psql`; wire `make migrate`.”
 
 **Agent: CPI ETL**
-- *“Implement `etl/jobs/cpi.py` to download CPI CSV for a given year, map ISO3, normalize to 0–100, and load into `observations`. Create `pipelines/assemble.py` that constructs `country_year` rows computing GOV from CPI (and WGI if present).”*
+- “Implement `etl/jobs/cpi.py` to download CPI CSV for a given year, map ISO3, normalize to 0–100, and load into `observations`. Create `pipelines/assemble.py` that constructs `country_year` rows computing GOV from CPI (and WGI if present).”
 
 **Agent: API Stubs**
-- *“Implement Next.js API routes for `/api/countries`, `/api/score`, `/api/country/[iso3]` using `pg` client; add Redis caching; return shapes defined in AGENTS.md.”*
+- “Implement Next.js API routes for `/api/countries`, `/api/score`, `/api/country/[iso3]` using `pg` client; add Redis caching; return shapes defined in AGENTS.md.”
 
 **Agent: Web Skeleton**
-- *“Build a minimal Next.js `/` page: map placeholder, country list, and detail panel that calls the API. Hardcode mock tile layer; color countries by GTI placeholder.”*
+- “Build a minimal Next.js `/` page using the wireframes in Section 8; add `MapView`, `FilterPanel`, `YearSlider`, `CountryPanel` components calling the API.”
 
 **Agent: CI Setup**
-- *“Create GitHub Actions workflow per Section 9; add lint configs; ensure PR checks run migrations and unit tests.”*
+- “Create GitHub Actions workflow per Section 10; add lint configs; ensure PR checks run migrations and unit tests.”
 
 **Agent: QA Hooks**
-- *“Implement outlier check util in `etl/common/qa.py` (Δ>25 points y/y flag) and integrate into assemble pipeline with a console summary.”*
+- “Implement outlier check util in `etl/common/qa.py` (Δ>25 points y/y flag) and integrate into assemble pipeline with a console summary.”
 
 ---
 
-## 11) MVP Definition of Done
+## 12) MVP Definition of Done
 
 - [ ] `make up` runs without errors; services respond.
 - [ ] `/api/score?year=YYYY&trust_type=proxy` returns CPI-based GOV scores for 5+ seed countries.
-- [ ] Web map placeholder renders with country colors from API.
+- [ ] Web map renders with country colors from API; tooltip + right panel show mock breakdown.
 - [ ] Methodology served at `/api/methodology` (from YAML).
 - [ ] Release notes template generated on first run in `releases/`.
 
 ---
 
-## 12) Next Steps After MVP
+## 13) Next Steps After MVP
 
 - Add **WGI ETL** and merge into GOV (50/50 with CPI).
 - Add **ESS API ingestion** for select countries; compute INST/INTER.
 - Add **time slider** and **confidence tiers**.
-- Swap placeholder tiles with real vector tiles (tippecanoe → mbtiles → tileserver-gl or MapLibre tiles).
+- Swap placeholder tiles with real vector tiles (tippecanoe → mbtiles → tileserver-gl/MapLibre tiles).
 
 ---
 
-## 13) Conventions
+## 14) Conventions
 
 - **TypeScript:** strict mode ON.
 - **Python:** `black`, `ruff`, `mypy`.

@@ -237,4 +237,3 @@ Indexes: `(iso3, year)`, `(trust_type, year)`, GIN on `sources_used`.
 ---
 
 **End of AGENTS.md**
-
