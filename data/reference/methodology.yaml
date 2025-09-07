@@ -1,0 +1,41 @@
+version: 0.1.0
+pillars:
+  interpersonal:
+    weight: 0.3
+    variables:
+      - source: WVS
+        var: TRUST_MOST_PEOPLE
+        scale: percent
+      - source: ESS
+        var: ppl_trust_index
+        scale: 0_10_to_percent
+  institutional:
+    weight: 0.4
+    variables:
+      - source: WVS
+        var: trust_gov
+        scale: percent
+      - source: ESS
+        var: trust_parliament
+        scale: 0_10_to_percent
+      - source: OECD
+        var: trust_gov
+        scale: percent
+  governance:
+    weight: 0.3
+    components:
+      - source: CPI
+        var: cpi_score
+        weight: 0.5
+      - source: WGI
+        var: avg(rule_of_law, government_effectiveness)
+        weight: 0.5
+scales:
+  0_10_to_percent: "x * 10"
+rescaling:
+  wgi: "((x + 2.5) / 5) * 100"
+confidence:
+  survey_grace_years: 3
+  decay_after_grace: 0.03
+  proxy_only_tier: C
+

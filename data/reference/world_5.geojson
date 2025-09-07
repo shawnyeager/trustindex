@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "name": "world_5",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"iso3": "USA", "name": "United States"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-125.0, 24.0],
+          [-66.0, 24.0],
+          [-66.0, 49.0],
+          [-125.0, 49.0],
+          [-125.0, 24.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"iso3": "SWE", "name": "Sweden"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [11.0, 55.0],
+          [24.0, 55.0],
+          [24.0, 69.0],
+          [11.0, 69.0],
+          [11.0, 55.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"iso3": "BRA", "name": "Brazil"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.0, -34.0],
+          [-34.0, -34.0],
+          [-34.0, 5.0],
+          [-74.0, 5.0],
+          [-74.0, -34.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"iso3": "NGA", "name": "Nigeria"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [2.0, 4.0],
+          [14.0, 4.0],
+          [14.0, 14.0],
+          [2.0, 14.0],
+          [2.0, 4.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"iso3": "IND", "name": "India"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [68.0, 8.0],
+          [97.0, 8.0],
+          [97.0, 36.0],
+          [68.0, 36.0],
+          [68.0, 8.0]
+        ]]
+      }
+    }
+  ]
+}
+

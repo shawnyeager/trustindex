@@ -1,0 +1,17 @@
+# Example configuration for Global Trust Index
+
+database:
+  url: postgres://user:pass@localhost:5432/trustindex
+
+etl:
+  data_dir: data
+  tmp_dir: .cache
+
+api:
+  host: 0.0.0.0
+  port: 8000
+
+security:
+  allow_origins:
+    - "*"
+

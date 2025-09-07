@@ -1,0 +1,24 @@
+# Node
+node_modules/
+.next/
+
+# Python
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Data
+data/raw/
+data/staging/
+*.mbtiles
+
+# Misc
+.DS_Store
+.env
+.idea/
+.vscode/
+dist/
+build/
+
