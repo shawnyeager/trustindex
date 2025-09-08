@@ -1,0 +1,11 @@
+iso3,iso2,name,region,income_group
+SWE,SE,Sweden,Europe,High income
+USA,US,United States,North America,High income
+BRA,BR,Brazil,South America,Upper middle income
+NGA,NG,Nigeria,Africa,Lower middle income
+IND,IN,India,Asia,Lower middle income
+DEU,DE,Germany,Europe,High income
+JPN,JP,Japan,Asia,High income
+ZAF,ZA,South Africa,Africa,Upper middle income
+GBR,GB,United Kingdom,Europe,High income
+FRA,FR,France,Europe,High income

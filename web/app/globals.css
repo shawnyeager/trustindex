@@ -1,0 +1,58 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  body {
+    @apply bg-white text-gray-900 font-sans;
+  }
+  
+  /* Map container styling */
+  .mapboxgl-map {
+    font-family: inherit;
+  }
+  
+  .mapboxgl-popup-content {
+    @apply rounded-lg shadow-lg p-3;
+  }
+  
+  .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+    @apply border-t-white;
+  }
+}
+
+@layer components {
+  /* Filter panel styling */
+  .filter-group {
+    @apply space-y-2 mb-6;
+  }
+  
+  .filter-label {
+    @apply text-sm font-semibold text-gray-700 uppercase tracking-wide;
+  }
+  
+  .filter-option {
+    @apply flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors;
+  }
+  
+  /* Country panel styling */
+  .country-stat {
+    @apply text-center p-4 bg-gray-50 rounded-lg;
+  }
+  
+  .country-stat-value {
+    @apply text-2xl font-bold text-gray-900;
+  }
+  
+  .country-stat-label {
+    @apply text-xs text-gray-500 uppercase tracking-wide mt-1;
+  }
+  
+  /* Map legend */
+  .map-legend {
+    @apply absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg;
+  }
+}
