@@ -2,72 +2,166 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, claude ]
   pull_request:
+    branches: [ main ]
 
 jobs:
-  build-test:
+  api:
+    name: API Tests
     runs-on: ubuntu-latest
-    env:
-      POSTGRES_HOST: localhost
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: trust
-      POSTGRES_USER: trust
-      POSTGRES_PASSWORD: trust
-      POSTGRES_URL: postgres://trust:trust@localhost:5432/trust
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: trust
+          POSTGRES_USER: trust
+          POSTGRES_DB: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'api/package-lock.json'
+    
+    - name: Install API dependencies
+      run: |
+        cd api
+        npm ci
+    
+    - name: Run database migrations
+      run: |
+        POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_DB=trust POSTGRES_USER=trust POSTGRES_PASSWORD=trust \
+        psql -h localhost -U trust -d trust -f db/migrations/000_init.sql
+      env:
+        PGPASSWORD: trust
+    
+    - name: Run API linting
+      run: |
+        cd api
+        npm run lint
+    
+    - name: Run API type checking
+      run: |
+        cd api
+        npm run typecheck
+    
+    - name: Run API tests
+      run: |
+        cd api
+        npm run test
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: trust
+        POSTGRES_USER: trust
+        POSTGRES_PASSWORD: trust
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+  web:
+    name: Web Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'web/package-lock.json'
+    
+    - name: Install Web dependencies
+      run: |
+        cd web
+        npm ci
+    
+    - name: Run Web linting
+      run: |
+        cd web
+        npm run lint
+    
+    - name: Run Web type checking
+      run: |
+        cd web
+        npm run typecheck
+    
+    - name: Build Web application
+      run: |
+        cd web
+        npm run build
 
-      - name: Start services (db, redis, minio, api)
-        run: docker compose up -d --build
+  etl:
+    name: ETL Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: trust
+          POSTGRES_USER: trust
+          POSTGRES_DB: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
-      - name: Install psql client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
-        run: |
-          for i in {1..60}; do
-            pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -d $POSTGRES_DB -U $POSTGRES_USER && break
-            sleep 1
-          done
-
-      - name: Apply DB migration
-        run: psql $POSTGRES_URL -f db/migrations/000_init.sql
-
-      - name: Seed countries
-        run: psql $POSTGRES_URL -f db/seed/seed_countries.sql
-
-      - name: Install ETL deps
-        run: pip install -r etl/requirements.txt
-
-      - name: Normalize example CPI + WGI
-        run: |
-          python -m etl.jobs.cpi --year 2024 --input data/reference/example_cpi.csv --out data/staging
-          python -m etl.jobs.wgi --year 2024 --input data/reference/example_wgi.csv --out data/staging
-
-      - name: Load CPI + WGI to Postgres
-        run: |
-          python -m etl.jobs.load_cpi_to_db --year 2024 --csv data/staging/cpi_2024.csv
-          python -m etl.jobs.load_wgi_to_db --year 2024 --csv data/staging/wgi_2024.csv
-
-      - name: Compute governance rows
-        run: python -m etl.pipelines.compute_governance_to_db --year 2024
-
-      - name: Wait for API
-        run: |
-          for i in {1..60}; do
-            curl -fsS http://localhost:8000/api/methodology && break || true
-            sleep 1
-          done
-
-      - name: Run smoke tests
-        run: python scripts/smoke_test.py
-
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: 'etl/requirements.txt'
+    
+    - name: Install ETL dependencies
+      run: |
+        cd etl
+        pip install -r requirements.txt
+    
+    - name: Run database migrations
+      run: |
+        POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_DB=trust POSTGRES_USER=trust POSTGRES_PASSWORD=trust \
+        psql -h localhost -U trust -d trust -f db/migrations/000_init.sql
+      env:
+        PGPASSWORD: trust
+    
+    - name: Run ETL linting
+      run: |
+        cd etl
+        black --check .
+        ruff .
+    
+    - name: Run ETL type checking
+      run: |
+        cd etl
+        mypy . --ignore-missing-imports
+    
+    - name: Run ETL tests
+      run: |
+        cd etl
+        pytest
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: trust
+        POSTGRES_USER: trust
+        POSTGRES_PASSWORD: trust

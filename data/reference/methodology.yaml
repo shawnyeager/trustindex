@@ -1,0 +1,76 @@
+version: 0.1.0
+description: "Global Trust Index methodology and weighting configuration"
+
+pillars:
+  interpersonal:
+    weight: 0.3
+    description: "Trust in other people - survey responses to 'most people can be trusted'"
+    variables:
+      - source: WVS
+        var: TRUST_MOST_PEOPLE
+        scale: percent
+        weight: 0.6
+      - source: ESS
+        var: ppl_trust_index
+        scale: 0_10_to_percent
+        weight: 0.4
+
+  institutional:
+    weight: 0.4
+    description: "Trust in government and institutions"
+    variables:
+      - source: WVS
+        var: trust_gov
+        scale: percent
+        weight: 0.4
+      - source: ESS
+        var: trust_parliament
+        scale: 0_10_to_percent
+        weight: 0.3
+      - source: OECD
+        var: trust_gov
+        scale: percent
+        weight: 0.3
+
+  governance:
+    weight: 0.3
+    description: "Institutional quality and corruption measures"
+    components:
+      - source: CPI
+        var: cpi_score
+        weight: 0.5
+        description: "Transparency International Corruption Perceptions Index"
+      - source: WGI
+        var: avg_rule_of_law_gov_effectiveness
+        weight: 0.5
+        description: "World Bank WGI average of Rule of Law and Government Effectiveness"
+
+# Scale conversion formulas
+scales:
+  percent: "x"  # Already 0-100
+  0_10_to_percent: "x * 10"  # Convert 0-10 scale to 0-100
+  
+# Rescaling for specific sources
+rescaling:
+  wgi: "((x + 2.5) / 5) * 100"  # Convert WGI -2.5 to +2.5 range to 0-100
+
+# Confidence scoring parameters
+confidence:
+  survey_grace_years: 3  # Years before applying decay
+  decay_after_grace: 0.03  # 3% decay per year after grace period
+  proxy_only_tier: "C"  # Confidence tier when only governance proxy available
+  
+# GTI aggregation rules
+aggregation:
+  primary: "0.4 * institutional + 0.3 * interpersonal + 0.3 * governance"
+  two_pillar_reweighting:
+    institutional_governance: "0.6 * institutional + 0.4 * governance"
+    institutional_interpersonal: "0.57 * institutional + 0.43 * interpersonal"
+    interpersonal_governance: "0.5 * interpersonal + 0.5 * governance"
+  proxy_only: "governance"
+
+# Data quality thresholds
+quality:
+  outlier_threshold: 25  # Flag year-over-year changes > 25 points
+  minimum_sample_size: 300  # Minimum survey sample size for inclusion
+  max_data_age_years: 7  # Maximum age for survey data inclusion
